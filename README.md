@@ -27,6 +27,10 @@ This repository publishes a Unity package in:
 
 - `publish/upm/com.dignus.unity`
 
+## Library API Usage
+
+Library setup, API usage, and code examples are documented in the [Dignus.Unity API guide](publish/Dignus.Unity.md).
+
 ## License
 
 - This package is released under the MIT License.
