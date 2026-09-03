@@ -3,3 +3,8 @@
 **/obj/*
 **.user
 publish/nuget/*
+**/Assets/Plugins/Lib/*
+UnityTest/.vsconfig
+UnityTest/UserSettings/*
+**/Assembly-CSharp.csproj
+**/Assembly-CSharp-firstpass.csproj
