@@ -6,7 +6,7 @@
 
     <PackageId>$(AssemblyName)</PackageId>
     <Title>Dignus.Unity</Title>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
 
     <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -14,8 +14,8 @@
     <PackageReadmeFile>Dignus.Unity.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
 
-    <PackageProjectUrl>https://github.com/EomTaeWook/Dignus-Public</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/EomTaeWook/Dignus</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.Unity</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/EomTaeWook/Dignus.Unity</RepositoryUrl>
     <Description>Unity integration and scene management extensions for the Dignus.</Description>
   </PropertyGroup>
   
