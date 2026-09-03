@@ -375,23 +375,17 @@ Use this when installing directly from a GitHub repository.
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/OWNER/REPO.git#v1.0.0"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git#v1.1.2"
   }
 }
 ```
-
-| Variant | Example |
-| :--- | :--- |
-| branch | `"https://github.com/OWNER/REPO.git#main"` |
-| commit | `"https://github.com/OWNER/REPO.git#f9c8d3e"` |
-| subfolder path | `"https://github.com/OWNER/REPO.git?path=publish/upm/com.dignus.unity#v1.0.0"` |
 
 If you use this folder as the repository root for the package, install with:
 
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/OWNER/REPO.git#v1.0.0"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git#v1.1.2"
   }
 }
 ```

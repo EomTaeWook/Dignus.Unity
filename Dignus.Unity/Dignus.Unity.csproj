@@ -6,7 +6,7 @@
 
     <PackageId>$(AssemblyName)</PackageId>
     <Title>Dignus.Unity</Title>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
 
     <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

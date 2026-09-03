@@ -20,15 +20,15 @@ Add the package to `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=publish/upm/com.dignus.unity#1.1.1"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=publish/upm/com.dignus.unity#1.1.2"
   }
 }
 ```
 
-If you pin to another tag or branch, replace `#1.1.1` with:
+If you pin to another tag or branch, replace `#1.1.2` with:
 
 - `#main`
-- `#v1.1.1`
+- `#v1.1.2`
 - `#<commit-hash>`
 
 ## License

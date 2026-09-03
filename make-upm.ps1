@@ -8,6 +8,7 @@ param(
     [string]$PublishReadmePath = (Join-Path $PSScriptRoot "publish\upm\com.dignus.unity\README.md"),
     [string]$PublishIconPath = (Join-Path $PSScriptRoot "publish\upm\com.dignus.unity\Icon.jpg"),
     [switch]$SkipBuild,
+    [bool]$UpdateMarkdownVersions = $true,
     [switch]$CreateZip,
     [switch]$Help
 )
@@ -26,6 +27,8 @@ Parameters:
   -Configuration        Build configuration (Debug|Release, default: Release)
   -ProjectPath          Path to Dignus.Unity.csproj
   -UpmRoot              Path to publish/upm/com.dignus.unity
+  -UpdateMarkdownVersions
+                       Sync markdown version tokens from <Version> in csproj (default: $true)
   -SkipBuild            Skip dotnet build step
   -CreateZip            Create zip package as publish/upm/com.dignus.unity-v<version>.zip
   -Help                 Show this usage
@@ -45,6 +48,52 @@ if (-not (Test-Path $UpmRoot)) {
     throw "UPM root not found: $UpmRoot"
 }
 
+function Update-MarkdownVersions {
+    param(
+        [Parameter(Mandatory)][string]$Version,
+        [Parameter(Mandatory)][string[]]$Paths
+    )
+
+    foreach ($mdPath in $Paths) {
+        if (-not (Test-Path $mdPath)) {
+            Write-Host "Skip missing markdown file: $mdPath"
+            continue
+        }
+
+        $content = Get-Content -Raw $mdPath
+
+        $updatedContent = [regex]::Replace(
+            $content,
+            'https://github\.com/EomTaeWook/Dignus\.Unity\.git(\?path=publish/upm/com\.dignus\.unity)?#(v?)(\d+\.\d+\.\d+)',
+            [System.Text.RegularExpressions.MatchEvaluator]{ param($match)
+                $path = $match.Groups[1].Value
+                if ($match.Groups[2].Value -ieq 'v') {
+                    "https://github.com/EomTaeWook/Dignus.Unity.git$path#v$Version"
+                } else {
+                    "https://github.com/EomTaeWook/Dignus.Unity.git$path#$Version"
+                }
+            }
+        )
+
+        $updatedContent = [regex]::Replace(
+            $updatedContent,
+            '(?<![A-Za-z0-9])#(v?)(\d+\.\d+\.\d+)(?![A-Za-z0-9])',
+            [System.Text.RegularExpressions.MatchEvaluator]{ param($match)
+                if ($match.Groups[1].Value -ieq 'v') {
+                    "#v$Version"
+                } else {
+                    "#$Version"
+                }
+            }
+        )
+
+        if ($updatedContent -ne $content) {
+            Set-Content -Path $mdPath -Value $updatedContent -Encoding UTF8
+            Write-Host "Updated markdown versioning: $mdPath"
+        }
+    }
+}
+
 $projectDir = Split-Path -Path $ProjectPath -Parent
 $runtimeRoot = Join-Path $UpmRoot "Runtime"
 if (-not (Test-Path $runtimeRoot)) {
@@ -58,8 +107,11 @@ if (-not $SkipBuild) {
 }
 
 [xml]$csproj = Get-Content -Raw $ProjectPath
-$versionNode = $csproj.Project.PropertyGroup.Version | Select-Object -First 1
-$projectVersion = if ($versionNode) { $versionNode.Trim() } else { "1.0.0" }
+$versionNode = $csproj.SelectSingleNode("//Project/PropertyGroup/Version")
+if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.'#text')) {
+    throw "Version node not found in csproj: $ProjectPath"
+}
+$projectVersion = $versionNode.'#text'.Trim()
 
 $packageJsonPath = Join-Path $UpmRoot "package.json"
 if (Test-Path $packageJsonPath) {
@@ -104,10 +156,16 @@ if (Test-Path $PublishLicensePath) {
     Copy-Item -Path $PublishLicensePath -Destination (Join-Path $UpmRoot "LICENSE") -Force
 }
 if (Test-Path $PublishReadmePath) {
-    Copy-Item -Path $PublishReadmePath -Destination (Join-Path $UpmRoot "README.md") -Force
+    $upmReadmePath = Join-Path $UpmRoot "README.md"
+    if ((Resolve-Path $PublishReadmePath).Path -ne (Resolve-Path $upmReadmePath).Path) {
+        Copy-Item -Path $PublishReadmePath -Destination $upmReadmePath -Force
+    }
 }
 if (Test-Path $PublishIconPath) {
-    Copy-Item -Path $PublishIconPath -Destination (Join-Path $UpmRoot "Icon.jpg") -Force
+    $upmIconPath = Join-Path $UpmRoot "Icon.jpg"
+    if ((Resolve-Path $PublishIconPath).Path -ne (Resolve-Path $upmIconPath).Path) {
+        Copy-Item -Path $PublishIconPath -Destination $upmIconPath -Force
+    }
 }
 
 if ($CreateZip) {
@@ -117,6 +175,15 @@ if ($CreateZip) {
     }
     Compress-Archive -Path (Join-Path $UpmRoot "*") -DestinationPath $zipPath -CompressionLevel Optimal
     Write-Host "Created zip: $zipPath"
+}
+
+if ($UpdateMarkdownVersions) {
+    $markdownPaths = @(
+        (Join-Path $PSScriptRoot "README.md"),
+        (Join-Path $PSScriptRoot "publish\Dignus.Unity.md"),
+        (Join-Path $PSScriptRoot "publish\upm\com.dignus.unity\README.md")
+    )
+    Update-MarkdownVersions -Version $projectVersion -Paths $markdownPaths
 }
 
 Write-Host "UPM generation completed. Version: $projectVersion"
