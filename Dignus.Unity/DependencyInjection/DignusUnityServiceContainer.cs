@@ -3,6 +3,7 @@
 // Part of Dignus Library
 
 using Dignus.DependencyInjection;
+using Dignus.DependencyInjection.Extensions;
 using System;
 using System.Reflection;
 
