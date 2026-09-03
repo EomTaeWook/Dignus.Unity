@@ -7,29 +7,25 @@ Unity integration package for the Dignus ecosystem.
 - Scene transition lifecycle helpers
 - Reactive bindable properties for scene model/state sync
 
+## Unity Package Manager Installation (GitHub URL)
+
+Use this when installing directly from a GitHub repository.
+
+If you use this folder as the repository root for the package, install with:
+
+```json
+{
+  "dependencies": {
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git#v1.1.2"
+  }
+}
+```
+
 ## Package (UPM)
 
 This repository publishes a Unity package in:
 
 - `publish/upm/com.dignus.unity`
-
-### Install via Unity Package Manager
-
-Add the package to `Packages/manifest.json`:
-
-```json
-{
-  "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=publish/upm/com.dignus.unity#1.1.2"
-  }
-}
-```
-
-If you pin to another tag or branch, replace `#1.1.2` with:
-
-- `#main`
-- `#v1.1.2`
-- `#<commit-hash>`
 
 ## License
 

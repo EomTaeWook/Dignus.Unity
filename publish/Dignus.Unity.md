@@ -5,6 +5,40 @@ Provides dependency injection, coroutine management, pooling, and DI-ready scene
 
 ---
 
+## Unity Package Manager Installation (GitHub URL)
+
+Use this when installing directly from a GitHub repository.
+
+| Target | Value |
+| :--- | :--- |
+| Manifest field | `Packages/manifest.json` → `"dependencies"` |
+| Source format | Git URL (optionally with branch, tag, commit, or `path` for subfolder) |
+
+If you use this folder as the repository root for the package, install with:
+
+```json
+{
+  "dependencies": {
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git#v1.1.2"
+  }
+}
+```
+
+For this repository, the minimum UPM-ready structure is currently:
+
+```text
+publish/upm/com.dignus.unity/
+  package.json
+  README.md
+  LICENSE
+  Icon.jpg
+  Runtime/
+    Dignus.Unity.dll
+    Dignus.dll
+```
+
+---
+
 ## Overview
 
 `Dignus.Unity` is a lightweight and extensible Unity framework built to streamline large-scale game architecture.  
@@ -37,18 +71,14 @@ It offers dependency injection, coroutine scheduling, resource and object poolin
 4. On scene transition, DI and `SceneBase` lifecycle wiring bind controller and model together.
 5. Shared infrastructure is handled by `DignusUnityCoroutineManager`, `DignusUnityResourceManager`, and `DignusUnityObjectPool`.
 
-```mermaid
-flowchart TD
-  A["Start/Bootstrap"] --> B["RegisterDependencies + Build"]
-  B --> C["LoadScene / LoadAdditiveScene"]
-  C --> D["SceneManager.LoadSceneAsync"]
-  D --> E["SceneBase.Awake -> DI Resolve Controller"]
-  E --> F["OnAwakeScene / OnSceneLoadCompleted"]
-  F --> G["Runtime Gameplay / UI"]
-  G --> H["UnloadAdditiveScene"]
-  H --> I["OnDestroyScene on SceneBase components"]
-  I --> J["SceneManager.UnloadSceneAsync"]
-```
+1. Startup calls `DignusUnityServiceContainer` and builds dependencies.
+2. Scene architecture loads through `DignusUnitySceneManager`.
+3. Scene load starts with `SceneManager.LoadSceneAsync(...)`.
+4. `SceneBase.Awake` resolves the DI controller for the scene.
+5. `OnAwakeScene` / `OnSceneLoadCompleted` wires gameplay and UI.
+6. Scene unload is performed through `UnloadAdditiveScene`.
+7. The scene lifecycle calls `OnDestroyScene` on scene components.
+8. Scene is unloaded via `SceneManager.UnloadSceneAsync`.
 
 ## Scene lifecycle at a glance
 
@@ -360,48 +390,6 @@ Calling it on the current/active single scene throws `InvalidOperationException`
 ```
 
 Dependency injection container specialized for Unity — supports runtime object construction with argument injection.
-
----
-
-## Unity Package Manager Installation (GitHub URL)
-
-Use this when installing directly from a GitHub repository.
-
-| Target | Value |
-| :--- | :--- |
-| Manifest field | `Packages/manifest.json` → `"dependencies"` |
-| Source format | Git URL (optionally with branch, tag, commit, or `path` for subfolder) |
-
-```json
-{
-  "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git#v1.1.2"
-  }
-}
-```
-
-If you use this folder as the repository root for the package, install with:
-
-```json
-{
-  "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git#v1.1.2"
-  }
-}
-```
-
-For this repository, the minimum UPM-ready structure is currently:
-
-```text
-publish/upm/com.dignus.unity/
-  package.json
-  README.md
-  LICENSE
-  Icon.jpg
-  Runtime/
-    Dignus.Unity.dll
-    Dignus.dll
-```
 
 ---
 
