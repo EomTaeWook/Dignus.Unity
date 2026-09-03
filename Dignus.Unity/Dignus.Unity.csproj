@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net481;net48</TargetFrameworks>
+    <Authors>EomTaeWook</Authors>
+    <Nullable>disable</Nullable>
+
+    <PackageId>$(AssemblyName)</PackageId>
+    <Title>Dignus.Unity</Title>
+    <Version>1.1.0</Version>
+
+    <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageReadmeFile>Dignus.Unity.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+
+    <PackageProjectUrl>https://github.com/EomTaeWook/Dignus-Public</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/EomTaeWook/Dignus</RepositoryUrl>
+    <Description>Unity integration and scene management extensions for the Dignus.</Description>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\publish\Icon.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\publish\Dignus.Unity.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dignus" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>..\Dll\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\Dll\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;$(SolutionDir)publish\dll\$(TargetFramework)\&quot;" />
+  </Target>
+  
+  <Target Name="PostPack" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="xcopy /Y &quot;$(OutputPath)$(PackageId).$(Version).nupkg&quot; &quot;$(SolutionDir)publish\nuget\&quot;" />
+  </Target>
+</Project>

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Dignus.Unity/Dignus.Unity.csproj" />
+  <Project Path="Dignus.Unity.UI/Dignus.Unity.UI.csproj" Id="9087824f-2d8a-44ab-b5ce-65426e6ad69d" />
+</Solution>

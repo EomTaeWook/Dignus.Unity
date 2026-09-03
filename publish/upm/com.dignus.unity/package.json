@@ -1,0 +1,23 @@
+{
+  "name": "com.dignus.unity",
+  "version": "1.1.1",
+  "displayName": "Dignus.Unity",
+  "description": "Unity integration and scene management extension for the Dignus ecosystem.",
+  "unity": "2022.3",
+  "license": "MIT",
+  "author": {
+    "name": "EomTaeWook"
+  },
+  "documentationUrl": "https://github.com/EomTaeWook/Dignus.Unity/blob/main/publish/upm/com.dignus.unity/README.md",
+  "changelogUrl": "https://github.com/EomTaeWook/Dignus.Unity/blob/main/publish/upm/com.dignus.unity/README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EomTaeWook/Dignus.Unity.git"
+  },
+  "keywords": [
+    "unity",
+    "di",
+    "scene",
+    "dignus"
+  ]
+}
