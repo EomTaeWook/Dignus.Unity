@@ -64,9 +64,9 @@ function Update-MarkdownVersions {
 
         $updatedContent = [regex]::Replace(
             $content,
-            'https://github\.com/EomTaeWook/Dignus\.Unity\.git(\?path=publish/upm/com\.dignus\.unity)?#(v?)(\d+\.\d+\.\d+)',
+            'https://github\.com/EomTaeWook/Dignus\.Unity\.git(\?path=/?publish/upm/com\.dignus\.unity)?#(v?)(\d+\.\d+\.\d+)',
             [System.Text.RegularExpressions.MatchEvaluator]{ param($match)
-                $path = $match.Groups[1].Value
+                $path = "?path=/publish/upm/com.dignus.unity"
                 if ($match.Groups[2].Value -ieq 'v') {
                     "https://github.com/EomTaeWook/Dignus.Unity.git$path#v$Version"
                 } else {
@@ -166,6 +166,18 @@ if (Test-Path $PublishIconPath) {
     if ((Resolve-Path $PublishIconPath).Path -ne (Resolve-Path $upmIconPath).Path) {
         Copy-Item -Path $PublishIconPath -Destination $upmIconPath -Force
     }
+}
+
+$missingMetaPaths = @(
+    Get-ChildItem -Path $UpmRoot -Recurse |
+        Where-Object {
+            $_.Name -notlike "*.meta" -and
+            -not (Test-Path "$($_.FullName).meta")
+        } |
+        ForEach-Object { $_.FullName }
+)
+if ($missingMetaPaths.Count -gt 0) {
+    throw "UPM assets are missing .meta files:`n$($missingMetaPaths -join "`n")"
 }
 
 if ($CreateZip) {
