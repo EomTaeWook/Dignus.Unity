@@ -1,247 +1,139 @@
 # Dignus.Unity
 
-**Lightweight Unity extension built on top of the Dignus framework.**  
-Provides dependency injection, coroutine management, pooling, and DI-ready scene architecture for scalable Unity projects.
+Lightweight Unity integration for the Dignus framework. It provides dependency
+injection helpers, scene lifecycle coordination, coroutine scheduling, resource
+caching, object pooling, and bindable properties.
 
----
+## Requirements
 
-## Unity Package Manager Installation (GitHub URL)
+- Unity 2022.3 or later
+- A project that can load assets from Unity `Resources` folders
 
-Use this when installing directly from a GitHub repository.
+## Installation
 
-| Target | Value |
-| :--- | :--- |
-| Manifest field | `Packages/manifest.json` → `"dependencies"` |
-| Source format | Git URL (optionally with branch, tag, commit, or `path` for subfolder) |
+### NuGet
 
-The package is located in a repository subfolder, so install it with the `path` query parameter:
+Package page: [Dignus.Unity on NuGet.org](https://www.nuget.org/packages/Dignus.Unity)
+
+```shell
+dotnet add package Dignus.Unity --version 1.1.3
+```
+
+Or use `PackageReference`:
+
+```xml
+<PackageReference Include="Dignus.Unity" Version="1.1.3" />
+```
+
+NuGet resolves the `Dignus` dependency automatically.
+
+### Unity Package Manager
+
+Add the Git dependency to `Packages/manifest.json`:
 
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.2"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.3"
   }
 }
 ```
 
-For this repository, the minimum UPM-ready structure is currently:
+The `path` query parameter must appear before the revision fragment. The Git
+package already contains its compatible `Dignus.dll`; do not add another copy
+of that assembly to the Unity project.
+
+The published package contains:
 
 ```text
 publish/upm/com.dignus.unity/
-  package.json
-  README.md
-  LICENSE
-  Icon.jpg
-  Runtime/
-    Dignus.Unity.dll
-    Dignus.dll
+  package.json                 package.json.meta
+  README.md                    README.md.meta
+  LICENSE                      LICENSE.meta
+  Icon.jpg                     Icon.jpg.meta
+  Runtime/                     Runtime.meta
+    Dignus.Unity.dll           Dignus.Unity.dll.meta
+    Dignus.dll                 Dignus.dll.meta
 ```
 
----
+## Runtime flow
 
-## Overview
+1. Register application dependencies and build the service container once.
+2. Load scenes through `DignusUnitySceneManager`.
+3. `SceneBase.Awake()` resolves and binds the scene controller.
+4. `OnAwakeScene()` initializes scene-specific state and UI.
+5. Manager-controlled scene transitions invoke `OnDestroyScene()` for cleanup.
 
-`Dignus.Unity` is a lightweight and extensible Unity framework built to streamline large-scale game architecture.  
-It offers dependency injection, coroutine scheduling, resource and object pooling, and scene-based architecture with reactive data binding.
+`OnDestroyScene()` is a Dignus.Unity lifecycle method. Unity does not invoke it
+automatically when a GameObject is destroyed or when a scene is unloaded through
+`UnityEngine.SceneManagement.SceneManager` directly.
 
----
+## Dependency injection
 
-## Core Features
-
-| Feature | Description |
-| :--- | :--- |
-| **Dependency Injection** | Lightweight DI via `DignusUnityServiceContainer` |
-| **Scene Architecture** | Structured scene controllers with `SceneControllerBase<TScene, TModel>` |
-| **Coroutine Manager** | High-performance coroutine scheduler using `DignusUnityCoroutineManager` |
-| **Object Pooling** | Reuse `GameObject` and `Component` instances via `DignusUnityObjectPool` |
-| **Resource Management** | Centralized prefab and asset handling with `DignusUnityResourceManager` |
-| **Reactive Binding** | `BindableProperty<T>` system for UI and gameplay data synchronization |
-| **Singleton System** | Simple and persistent lifecycle management for runtime managers |
-| **Async Scene Flow** | `DignusUnitySceneManager` for async scene transitions and initialization |
-
----
-
-## Architecture Overview
-
-`Dignus.Unity` works in this order:
-
-1. `DignusUnityServiceContainer` builds the DI container at application startup.
-2. Each scene splits responsibilities using `SceneBase` + `SceneControllerBase<TScene, TModel>` + `ISceneModel`.
-3. `DignusUnitySceneManager` serializes scene load/unload through queue processing.
-4. On scene transition, DI and `SceneBase` lifecycle wiring bind controller and model together.
-5. Shared infrastructure is handled by `DignusUnityCoroutineManager`, `DignusUnityResourceManager`, and `DignusUnityObjectPool`.
-
-1. Startup calls `DignusUnityServiceContainer` and builds dependencies.
-2. Scene architecture loads through `DignusUnitySceneManager`.
-3. Scene load starts with `SceneManager.LoadSceneAsync(...)`.
-4. `SceneBase.Awake` resolves the DI controller for the scene.
-5. `OnAwakeScene` / `OnSceneLoadCompleted` wires gameplay and UI.
-6. Scene unload is performed through `UnloadAdditiveScene`.
-7. The scene lifecycle calls `OnDestroyScene` on scene components.
-8. Scene is unloaded via `SceneManager.UnloadSceneAsync`.
-
-## Scene lifecycle at a glance
-
-- Single scene load: Unload previous scene flow and load the new single scene, then update `CurrentScene`.
-- Additive load: Keep existing scenes and load an additional scene.
-- Additive unload: Cleanup scene components through `OnDestroyScene()` and unload the scene.  
-  (No completion callback; lifecycle-based completion)
-- Exception: `InvalidOperationException` is thrown if `UnloadAdditiveScene` is called for the current or active single scene.
-
-### SceneBase practical patterns
-
-When controller binding is manual (like a title scene):
-
-```csharp
-public class TitleScene : SceneBase
-{
-    private TitleSceneController _titleSceneController;
-
-    public override void OnDestroyScene()
-    {
-        _titleSceneController.Dispose();
-    }
-
-    protected override void OnAwakeScene()
-    {
-        _titleSceneController = DignusUnityServiceContainer.GetService<TitleSceneController>();
-        _titleSceneController.BindScene(this);
-        _titleSceneController.InitializeLocalSession();
-    }
-}
-```
-
-For most scenes, `SceneBase<TController>` handles binding automatically:
-
-```csharp
-internal class GameScene : SceneBase<GameSceneController>
-{
-    [SerializeField] private GameWorld _gameWorld;
-    private AtlasManager _atlasManager;
-    private GameSceneUI _gameUI;
-
-    protected override void OnAwakeScene()
-    {
-        if (_gameWorld == null)
-        {
-            throw new InvalidOperationException("GameScene requires a GameWorld.");
-        }
-
-        _atlasManager = DignusUnityServiceContainer.GetService<AtlasManager>();
-        _atlasManager.Load(SceneType.GameScene);
-        _gameWorld.Init(_atlasManager);
-
-        SceneController.Init(_gameWorld);
-        _gameUI = UIManager.Instance.AddUI<GameSceneUI>();
-        _gameUI.Init(SceneController.Model, SceneController);
-    }
-
-    public override void OnDestroyScene()
-    {
-        _gameUI?.DisposeUI();
-        SceneController.Dispose();
-        _gameWorld?.Dispose();
-        _atlasManager?.Unload();
-        _atlasManager = null;
-    }
-}
-```
-
-The pattern is the same: initialize dependencies/data in `OnAwakeScene`,
-then perform scene-scoped cleanup in `OnDestroyScene`.
-
-Important: Configure the DI container once in `ApplicationManager`, and use `GetService()` inside scene entry only.
-
-## Basic Usage
-
-### 1. Add packages and mark dependencies
-
-1. Add `Dignus` and `Dignus.Unity` dependencies to your Unity C# project.
-2. Mark scene controllers/services with `[Injectable]`.
-3. Prefer one constructor for each injectable class, or mark your constructor with `[InjectConstructor]`.
+Mark services and controllers with `[Injectable]`, then register the application
+assembly once during startup:
 
 ```csharp
 using Dignus.DependencyInjection.Attributes;
+using Dignus.Unity;
+using Dignus.Unity.DependencyInjection;
 using Dignus.Unity.Framework;
 
 [Injectable(LifeScope.Singleton)]
-public class LobbySceneController : SceneControllerBase<LobbyScene, LobbySceneModel>
+public sealed class LobbySceneController : SceneControllerBase<LobbyScene>
 {
     private readonly GameClientService _gameClientService;
-    private readonly UserService _userService;
 
-    public LobbySceneController(GameClientService gameClientService, UserService userService)
+    public LobbySceneController(GameClientService gameClientService)
     {
         _gameClientService = gameClientService;
-        _userService = userService;
+    }
+
+    public override void Dispose()
+    {
     }
 }
-```
 
-### 2. Register dependencies at startup
-
-DI should be initialized once in app startup bootstrap (`ApplicationManager`, etc.) with a single call.  
-In practice, call `Init()` at entry and then use `GetService()` / `SceneBase<T>` directly in scenes.
-
-```csharp
-using DataContainer.Generated;
-using Dignus.Unity;
-using Dignus.Unity.DependencyInjection;
-using UnityEngine;
-
-namespace Assets.Scripts.Internals
+public sealed class ApplicationManager : SingletonMonoBehaviour<ApplicationManager>
 {
-    internal class ApplicationManager : SingletonMonoBehaviour<ApplicationManager>
-    {
-        private bool _isInit = false;
+    private bool _initialized;
 
-        public void Init()
+    public void Initialize()
+    {
+        if (_initialized)
         {
-            if (_isInit == true)
-            {
-                return;
-            }
-            _isInit = true;
-
-            // register all dependencies used by game code
-            var container = DignusUnityServiceContainer.RegisterDependencies(GetType().Assembly);
-            container.Build();
+            return;
         }
+
+        var container = DignusUnityServiceContainer.RegisterDependencies(GetType().Assembly);
+        container.Build();
+        _initialized = true;
     }
 }
 ```
 
+Resolve services only after `Build()` has completed:
+
 ```csharp
-public class GameBootstrap : MonoBehaviour
-{
-    private void Awake()
-    {
-        ApplicationManager.Instance.Init();
-    }
-}
+var controller = DignusUnityServiceContainer.GetService<LobbySceneController>();
 ```
 
-```csharp
-// optional: load first scene after bootstrap
-public class BootSceneLoader : MonoBehaviour
-{
-    private void Start()
-    {
-        DignusUnitySceneManager.Instance.LoadScene(SceneType.TitleScene);
-    }
-}
-```
+If an injectable type has multiple public constructors, annotate the constructor
+to use with `[InjectConstructor]`.
 
-### 3. Resolve scene controller automatically in `SceneBase`
+## Scene architecture
 
-`SceneBase<TController>` uses `DignusUnityServiceContainer.GetService<TController>()` during `Awake()` and binds itself.
+`SceneBase<TController>` resolves the controller before calling
+`OnAwakeScene()` and binds the scene automatically:
 
 ```csharp
-public class LobbyScene : SceneBase<LobbySceneController>
+using Dignus.Unity.Framework;
+
+public sealed class LobbyScene : SceneBase<LobbySceneController>
 {
     protected override void OnAwakeScene()
     {
-        SceneController.OnAwake();
+        SceneController.Initialize();
     }
 
     public override void OnDestroyScene()
@@ -251,239 +143,148 @@ public class LobbyScene : SceneBase<LobbySceneController>
 }
 ```
 
-### 4. Pass scene components as runtime arguments
+### Runtime constructor arguments
 
-If a scene needs Unity components injected into controller constructor:
+Unity components assigned to the inherited `InjectedComponents` array are
+matched to controller constructor parameters before the container is used as a
+fallback:
 
 ```csharp
-public class LobbySceneController : SceneControllerBase<LobbyScene, LobbySceneModel>
+public sealed class LobbySceneController : SceneControllerBase<LobbyScene>
 {
     private readonly LobbyUI _lobbyUI;
 
     public LobbySceneController(LobbyUI lobbyUI, GameClientService gameClientService)
     {
         _lobbyUI = lobbyUI;
-        _gameClientService = gameClientService;
-    }
-}
-```
-
-```csharp
-public class LobbyScene : SceneBase<LobbySceneController>
-{
-    public LobbyUI LobbyUI;
-    protected override void OnAwakeScene()
-    {
-        // InjectedComponents are matched by type to constructor parameters
-        // before DI container fallback.
-        SceneController.OnAwake();
-    }
-}
-```
-
-```csharp
-// or set the array at runtime
-public override void OnAwakeScene()
-{
-    InjectedComponents = new MonoBehaviour[] { LobbyUI };
-}
-```
-
-
-### 6. Model bindable property usage
-
-Use `BindableProperty<T>` in `ISceneModel` to expose UI-bound values and subscribe to changes from scene/UI logic.
-
-```csharp
-using Dignus.Unity.Binding;
-
-public class LobbySceneModel : ISceneModel
-{
-    public BindableProperty<int> Gold { get; } = new BindableProperty<int>(0);
-    public BindableProperty<string> StatusMessage { get; } = new BindableProperty<string>(string.Empty);
-}
-```
-
-```csharp
-// SceneController
-Model.Gold.Value += 100;
-Model.StatusMessage.Value = "Ready";
-```
-
-```csharp
-// Scene or UI class
-private void OnEnable()
-{
-    SceneController.Model.Gold.ValueChanged += OnGoldChanged;
-}
-
-private void OnDisable()
-{
-    SceneController.Model.Gold.ValueChanged -= OnGoldChanged;
-}
-
-private void OnGoldChanged(int value)
-{
-    _goldText.text = value.ToString();
-}
-```
-
-`BindableProperty<T>` supports automatic binding semantics through event hooks, and because `Value` is a property you can also use it directly when needed.
-### 5. UnityServiceContainer quick reference
-
-```csharp
-var controller = DignusUnityServiceContainer.GetService<LobbySceneController>();
-var controllerWithComponents = DignusUnityServiceContainer.GetService<LobbySceneController>(lobbyUI, optionalServiceLocator);
-```
-
----
-
-## Manager Overview
-
-### DignusUnityCoroutineManager
-```csharp
-DignusUnityCoroutineManager.Start(MyCoroutine());
-```
-
-Efficient coroutine handler that executes enumerators or coroutine handles with optional delay and completion callbacks.
-Internally updates via FixedUpdate to ensure stable timing without GC allocations.
-
-### DignusUnityObjectPool
-```csharp
-var bullet = DignusUnityObjectPool.Instance.Pop(prefab);
-DignusUnityObjectPool.Instance.Push(bullet);
-```
-
-Reuses and manages pooled GameObject instances to minimize runtime allocations.
-Supports both GameObject and Component-based access.
-
-### DignusUnityResourceManager
-```csharp
-var prefab = DignusUnityResourceManager.Instance.LoadAsset<MyPrefab>();
-```
-
-Loads assets from Unity’s Resources folder with internal caching and prefab-path attribute support.
-
-### DignusUnitySceneManager
-```csharp
-// single scene
-DignusUnitySceneManager.Instance.LoadScene(SceneType.LobbyScene);
-
-// additive scene load
-DignusUnitySceneManager.Instance.LoadAdditiveScene(SceneType.HUD);
-```
-
-```csharp
-// unload an additive scene when it is no longer needed
-DignusUnitySceneManager.Instance.UnloadAdditiveScene(SceneType.HUD);
-```
-
-`UnloadAdditiveScene(...)` is an additive-scene-only API.  
-Cleanup is done through scene lifecycle (`OnDestroyScene()`), so **no completion callback is supported**.  
-Calling it on the current/active single scene throws `InvalidOperationException`.
-
-### UnityServiceContainer
-```csharp
-// RegisterDependencies() and Build() are called once in bootstrap, not per scene
-// var container = DignusUnityServiceContainer.RegisterDependencies(...);
-// container.Build();
-```
-
-Dependency injection container specialized for Unity — supports runtime object construction with argument injection.
-
----
-
-## Example: Lobby Scene Architecture
-### Controller
-```csharp
-[Injectable(LifeScope.Singleton)]
-public class LobbySceneController : SceneControllerBase<LobbyScene, LobbySceneModel>
-{
-    private readonly GameClientService _gameClientService;
-    private readonly UserService _userService;
-
-    public LobbySceneController(GameClientService gameClientService, UserService userService)
-    {
-        _userService = userService;
-        _gameClientService = gameClientService;
-    }
-
-    public void OnAwake()
-    {
-        Model.CurrentPlayer = new GamePlayer()
-        {
-            AccountId = _userService.GetUserModel().AccountId,
-            Nickname = _userService.GetUserModel().Nickname
-        };
-    }
-
-    public void RoomListRequest(int page, int size)
-    {
-        _gameClientService.Send(Packet.MakePacket(CGSProtocol.GetRoomList, new GetRoomList()
-        {
-            Page = page,
-            ItemSize = size
-        }));
     }
 
     public override void Dispose()
     {
-        Model.LobbyRoomInfos.Clear();
     }
 }
 ```
 
-### Model
+In the Unity Inspector, add the scene's `LobbyUI` component to
+`LobbyScene.InjectedComponents`. Do not assign `InjectedComponents` inside
+`OnAwakeScene()`—controller resolution has already happened by then.
+
+## Bindable properties
+
 ```csharp
-public class LobbySceneModel : ISceneModel
+using Dignus.Unity.Binding;
+
+public sealed class LobbySceneModel : ISceneModel
 {
-    public Dictionary<int, ArrayQueue<RoomListItemUI>> LobbyRoomInfos { get; set; } = new();
-    public GamePlayer CurrentPlayer { get; set; }
-    public List<PlayerModel> RoomMembers { get; set; }
-    public int JoinRoomNumber { get; set; }
+    public BindableProperty<int> Gold { get; } = new BindableProperty<int>(0);
 }
 ```
 
-### Scene
+Subscribe and unsubscribe with the Unity component lifecycle:
+
 ```csharp
-public class LobbyScene : SceneBase<LobbySceneController>
+private void OnEnable()
 {
-    private LobbyUI _lobbyUI;
+    _model.Gold.ValueChanged += OnGoldChanged;
+    OnGoldChanged(_model.Gold.Value);
+}
 
-    protected override void OnAwakeScene()
-    {
-        SceneController.OnAwake();
-        _lobbyUI = UIManager.Instance.AddUI<LobbyUI>();
-        _lobbyUI.Init(SceneController);
-    }
-
-    public override void OnDestroyScene()
-    {
-        UIManager.Instance.RemoveUI(_lobbyUI);
-        SceneController.Dispose();
-    }
+private void OnDisable()
+{
+    _model.Gold.ValueChanged -= OnGoldChanged;
 }
 ```
 
+Assigning an equal value does not raise `ValueChanged`. Call `NotifyChanged()`
+when the contained object changed internally without replacing the value.
 
-### Example Scene Flow
+## Managers
+
+### Coroutine manager
+
 ```csharp
-// Load Scene with DI Controller
-DignusUnitySceneManager.Instance.LoadScene(SceneType.LobbyScene);
-
+DignusUnityCoroutineManager.Start(MyCoroutine());
+DignusUnityCoroutineManager.Start(0.5f, MyCoroutine(), OnCompleted);
 ```
 
-### Highlights
+The scheduler advances from `FixedUpdate()` using `Time.fixedDeltaTime`. It
+therefore follows the physics update cadence and pauses when scaled fixed-time
+updates stop, including the usual `Time.timeScale = 0` case.
 
-Zero-GC Scene Flow – Optimized for stable runtime performance
+### Object pool
 
-Reactive UI – BindableProperty updates UI automatically
+The extension methods handle parenting, activation, and deactivation:
 
-Extensible Architecture – Seamlessly integrates with Dignus.Core and Dignus.DependencyInjection
+```csharp
+using Dignus.Unity.Extensions;
 
-Unity-Native Lifecycle – Works directly with Awake, Start, and OnDestroy
+var bullet = this.InstantiateWithPool(bulletPrefab);
+bullet.Recycle();
+```
 
-Production Ready – Designed for scalability and maintainability
+Only objects obtained from `DignusUnityObjectPool` can be recycled into it.
+Returning an unrelated object throws `InvalidOperationException`.
 
+The lower-level `Pop()` and `Push()` methods are also available, but callers are
+responsible for setting the parent and active state when using them directly.
 
+### Resource manager
 
+Use `[PrefabPath]` to derive a `Resources` path from a component or asset type:
+
+```csharp
+using Dignus.Unity.Attributes;
+using UnityEngine;
+
+[PrefabPath("Prefabs/UI")]
+public sealed class LobbyUI : MonoBehaviour
+{
+}
+
+var prefab = DignusUnityResourceManager.Instance.LoadAsset<LobbyUI>();
+```
+
+An explicit path is also supported:
+
+```csharp
+var atlas = DignusUnityResourceManager.Instance.LoadAsset<SpriteAtlas>(
+    "SpriteAtlases/Common");
+```
+
+Loaded assets are cached by resource path until `UnloadAsset()` is called.
+
+### Scene manager
+
+```csharp
+var sceneManager = DignusUnitySceneManager.Instance;
+
+sceneManager.LoadScene(SceneType.LobbyScene, scene =>
+{
+    // The loaded scene has completed Awake processing here.
+});
+
+sceneManager.LoadAdditiveScene(SceneType.HUD);
+sceneManager.UnloadAdditiveScene(SceneType.HUD);
+```
+
+Load events are available for start, progress, and completion. Until an active
+load-state guard is added to the manager, submit the next load request only after
+the previous completion callback or completion event. Additive unload has no
+completion callback.
+
+Each managed scene should contain one authoritative `SceneBase`. If several
+instances register during the same load, the last registered instance becomes
+the callback value.
+
+## Known lifecycle boundaries
+
+- Use the Dignus.Unity scene manager when `OnDestroyScene()` cleanup is required.
+- Configure `InjectedComponents` before `SceneBase.Awake()` runs.
+- Avoid issuing overlapping scene load requests.
+- Unsubscribe bindable-property and manager events when their owner is disabled
+  or disposed.
+- Objects returned to the pool must originate from that pool.
+
+## License
+
+Dignus.Unity is released under the MIT License. See `LICENSE` for details.

@@ -5,7 +5,7 @@ param(
     [string]$UpmRoot = (Join-Path $PSScriptRoot "publish\upm\com.dignus.unity"),
     [string]$BinRoot = (Join-Path $PSScriptRoot "Dignus.Unity\bin"),
     [string]$PublishLicensePath = (Join-Path $PSScriptRoot "LICENSE"),
-    [string]$PublishReadmePath = (Join-Path $PSScriptRoot "publish\upm\com.dignus.unity\README.md"),
+    [string]$PublishReadmePath = (Join-Path $PSScriptRoot "publish\Dignus.Unity.md"),
     [string]$PublishIconPath = (Join-Path $PSScriptRoot "publish\upm\com.dignus.unity\Icon.jpg"),
     [switch]$SkipBuild,
     [bool]$UpdateMarkdownVersions = $true,
@@ -27,6 +27,7 @@ Parameters:
   -Configuration        Build configuration (Debug|Release, default: Release)
   -ProjectPath          Path to Dignus.Unity.csproj
   -UpmRoot              Path to publish/upm/com.dignus.unity
+  -PublishReadmePath    Canonical README copied into the UPM package
   -UpdateMarkdownVersions
                        Sync markdown version tokens from <Version> in csproj (default: $true)
   -SkipBuild            Skip dotnet build step

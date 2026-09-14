@@ -3,10 +3,11 @@
     <TargetFrameworks>netstandard2.1;net481;net48</TargetFrameworks>
     <Authors>EomTaeWook</Authors>
     <Nullable>disable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 
     <PackageId>$(AssemblyName)</PackageId>
     <Title>Dignus.Unity</Title>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
 
     <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -35,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dignus" Version="1.2.0" />
+    <PackageReference Include="Dignus" Version="1.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,10 +49,10 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;$(SolutionDir)publish\dll\$(TargetFramework)\&quot;" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;$(MSBuildProjectDirectory)\..\publish\dll\$(TargetFramework)\&quot;" />
   </Target>
   
   <Target Name="PostPack" AfterTargets="Pack" Condition="'$(Configuration)' == 'Release'">
-    <Exec Command="xcopy /Y &quot;$(OutputPath)$(PackageId).$(Version).nupkg&quot; &quot;$(SolutionDir)publish\nuget\&quot;" />
+    <Exec Command="xcopy /Y &quot;$(OutputPath)$(PackageId).$(Version).nupkg&quot; &quot;$(MSBuildProjectDirectory)\..\publish\nuget\&quot;" />
   </Target>
 </Project>

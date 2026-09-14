@@ -3,6 +3,7 @@
 // Part of Dignus Library
 
 using Dignus.Framework;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -87,17 +88,11 @@ namespace Dignus.Unity
 
         public void Push(GameObject item)
         {
-            if (_goToPoolItemMap.TryGetValue(item, out PoolItem poolItem) == false)
+            if (!_goToPoolItemMap.TryGetValue(item, out var poolItem))
             {
-                var pool = new Pool(item);
-                _poolContainer.Add(item, pool);
-                poolItem = new PoolItem()
-                {
-                    GameObject = item,
-                    Pool = pool,
-                };
-
+                throw new InvalidOperationException("This object was not created by DignusUnityObjectPool.");
             }
+
             poolItem.Pool.Push(poolItem);
         }
         public void Push(Component item)
