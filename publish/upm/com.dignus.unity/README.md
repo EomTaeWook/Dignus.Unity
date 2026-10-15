@@ -16,13 +16,13 @@ caching, object pooling, and bindable properties.
 Package page: [Dignus.Unity on NuGet.org](https://www.nuget.org/packages/Dignus.Unity)
 
 ```shell
-dotnet add package Dignus.Unity --version 1.1.3
+dotnet add package Dignus.Unity --version 1.1.4
 ```
 
 Or use `PackageReference`:
 
 ```xml
-<PackageReference Include="Dignus.Unity" Version="1.1.3" />
+<PackageReference Include="Dignus.Unity" Version="1.1.4" />
 ```
 
 NuGet resolves the `Dignus` dependency automatically.
