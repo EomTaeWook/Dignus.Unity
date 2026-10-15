@@ -1,4 +1,4 @@
-# Dignus.Unity
+﻿# Dignus.Unity
 
 Lightweight Unity integration for the Dignus framework. It provides dependency
 injection helpers, scene lifecycle coordination, coroutine scheduling, resource
@@ -34,7 +34,7 @@ Add the Git dependency to `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.3"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.4"
   }
 }
 ```
@@ -167,7 +167,7 @@ public sealed class LobbySceneController : SceneControllerBase<LobbyScene>
 
 In the Unity Inspector, add the scene's `LobbyUI` component to
 `LobbyScene.InjectedComponents`. Do not assign `InjectedComponents` inside
-`OnAwakeScene()`—controller resolution has already happened by then.
+`OnAwakeScene()`?봠ontroller resolution has already happened by then.
 
 ## Bindable properties
 
@@ -288,3 +288,4 @@ the callback value.
 ## License
 
 Dignus.Unity is released under the MIT License. See `LICENSE` for details.
+

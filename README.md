@@ -1,4 +1,4 @@
-# Dignus.Unity
+﻿# Dignus.Unity
 
 Unity integration package for the Dignus ecosystem.
 
@@ -34,7 +34,7 @@ The package is located in a repository subfolder, so install it with the `path` 
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.3"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.4"
   }
 }
 ```
@@ -59,3 +59,4 @@ Library setup, API usage, and code examples are documented in the [Dignus.Unity 
 
 - This package is released under the MIT License.
 - See [LICENSE](LICENSE).
+
