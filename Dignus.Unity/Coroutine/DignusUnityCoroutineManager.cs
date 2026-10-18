@@ -31,9 +31,9 @@ namespace Dignus.Unity.Coroutine
             return Instance._coroutineHandler.Start(delay, enumerator, onCompleteCallback);
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
-            _coroutineHandler.UpdateCoroutines(Time.fixedDeltaTime);
+            _coroutineHandler.UpdateCoroutines(Time.deltaTime);
         }
     }
 }

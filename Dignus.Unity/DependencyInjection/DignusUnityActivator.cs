@@ -45,8 +45,8 @@ namespace Dignus.Unity.DependencyInjection
             }
 
             var constructor = SelectConstructor(targetType);
-            var constructorArgs = GetConstructorArguments(serviceContainer, constructor, args);
-            var instance = Activator.CreateInstance(targetType, constructorArgs);
+            var constructorArguments = GetConstructorArguments(serviceContainer, constructor, args);
+            var instance = constructor.Invoke(constructorArguments);
 
             foreach (var property in targetType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty))
             {

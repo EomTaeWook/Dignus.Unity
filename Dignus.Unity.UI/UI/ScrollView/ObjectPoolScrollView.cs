@@ -85,11 +85,12 @@ namespace Dignus.Unity.UI.ScrollView
             CalculateItemSizeAndTotalVisibleItems();
             AdjustContentSize();
 
-            for (int i = 0; i < _totalVisibleItemCount; ++i)
+            int initialItemCount = System.Math.Min(_totalVisibleItemCount, _scrollDataList.Count);
+            for (int i = 0; i < initialItemCount; ++i)
             {
                 AddNewItemToScrollView(_scrollDataList[i], i);
             }
-            _lastEndIndex = _totalVisibleItemCount;
+            _lastEndIndex = initialItemCount;
         }
         private void OnDestroy()
         {
