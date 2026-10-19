@@ -14,13 +14,13 @@ Requires Unity 2022.3 or later.
 NuGet package: [Dignus.Unity](https://www.nuget.org/packages/Dignus.Unity)
 
 ```shell
-dotnet add package Dignus.Unity --version 1.1.4
+dotnet add package Dignus.Unity --version 1.1.5
 ```
 
 Or add a package reference directly:
 
 ```xml
-<PackageReference Include="Dignus.Unity" Version="1.1.4" />
+<PackageReference Include="Dignus.Unity" Version="1.1.5" />
 ```
 
 NuGet resolves the `Dignus` dependency automatically.
@@ -34,7 +34,7 @@ The package is located in a repository subfolder, so install it with the `path` 
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.4"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.5"
   }
 }
 ```

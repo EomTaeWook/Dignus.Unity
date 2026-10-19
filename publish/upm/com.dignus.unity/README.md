@@ -16,13 +16,13 @@ caching, object pooling, and bindable properties.
 Package page: [Dignus.Unity on NuGet.org](https://www.nuget.org/packages/Dignus.Unity)
 
 ```shell
-dotnet add package Dignus.Unity --version 1.1.4
+dotnet add package Dignus.Unity --version 1.1.5
 ```
 
 Or use `PackageReference`:
 
 ```xml
-<PackageReference Include="Dignus.Unity" Version="1.1.4" />
+<PackageReference Include="Dignus.Unity" Version="1.1.5" />
 ```
 
 NuGet resolves the `Dignus` dependency automatically.
@@ -34,7 +34,7 @@ Add the Git dependency to `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.4"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.5"
   }
 }
 ```
@@ -207,9 +207,9 @@ DignusUnityCoroutineManager.Start(MyCoroutine());
 DignusUnityCoroutineManager.Start(0.5f, MyCoroutine(), OnCompleted);
 ```
 
-The scheduler advances from `FixedUpdate()` using `Time.fixedDeltaTime`. It
-therefore follows the physics update cadence and pauses when scaled fixed-time
-updates stop, including the usual `Time.timeScale = 0` case.
+The scheduler advances from `Update()` using `Time.deltaTime` once per frame.
+Timed waits follow scaled game time. With `Time.timeScale = 0`, timed waits
+stop progressing, while frame waits and condition checks continue.
 
 ### Object pool
 
