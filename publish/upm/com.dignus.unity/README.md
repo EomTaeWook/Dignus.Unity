@@ -16,13 +16,13 @@ caching, object pooling, and bindable properties.
 Package page: [Dignus.Unity on NuGet.org](https://www.nuget.org/packages/Dignus.Unity)
 
 ```shell
-dotnet add package Dignus.Unity --version 1.1.5
+dotnet add package Dignus.Unity --version 1.1.6
 ```
 
 Or use `PackageReference`:
 
 ```xml
-<PackageReference Include="Dignus.Unity" Version="1.1.5" />
+<PackageReference Include="Dignus.Unity" Version="1.1.6" />
 ```
 
 NuGet resolves the `Dignus` dependency automatically.
@@ -34,7 +34,7 @@ Add the Git dependency to `Packages/manifest.json`:
 ```json
 {
   "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.5"
+    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.6"
   }
 }
 ```
