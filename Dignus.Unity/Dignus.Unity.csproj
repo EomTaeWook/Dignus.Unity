@@ -11,21 +11,19 @@
 
     <Copyright>© 2021–2026 EomTaeWook. Released under the MIT License.</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageIcon>Icon.jpg</PackageIcon>
+    <PackageIcon>Icon.png</PackageIcon>
     <PackageReadmeFile>Dignus.Unity.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
     <PackageProjectUrl>https://github.com/EomTaeWook/Dignus.Unity</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.Unity</RepositoryUrl>
-    <Description>Unity integration and scene management extensions for the Dignus.</Description>
+    <Description>Unity utilities for dependency injection, scene lifecycle management, coroutines, object pooling and bindable properties.</Description>
+    <PackageTags>unity;game;dependency-injection;scene;coroutine;object-pool;binding</PackageTags>
   </PropertyGroup>
   
   <ItemGroup>
-    <None Include="..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Include="..\publish\Icon.jpg">
+    <None Include="..\publish\Icon.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
