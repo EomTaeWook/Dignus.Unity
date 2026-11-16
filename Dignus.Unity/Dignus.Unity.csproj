@@ -19,7 +19,6 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/EomTaeWook/Dignus.Unity</RepositoryUrl>
     <Description>Unity utilities for dependency injection, scene lifecycle management, coroutines, object pooling and bindable properties.</Description>
-    <PackageTags>unity;game;dependency-injection;scene;coroutine;object-pool;binding</PackageTags>
   </PropertyGroup>
   
   <ItemGroup>
