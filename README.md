@@ -1,4 +1,4 @@
-﻿# Dignus.Unity
+# Dignus.Unity
 
 Unity integration package for the Dignus ecosystem.
 
@@ -53,7 +53,7 @@ import the package from its immutable cache.
 
 ## Library API Usage
 
-Library setup, API usage, and code examples are documented in the [Dignus.Unity API guide](publish/Dignus.Unity.md).
+Library setup, API usage, and code examples are documented in the [Dignus.Unity API guide](publish/Dignus.Unity.md). It includes startup registration, scene/controller/model wiring and cleanup, optional component injection, binding subscriptions, coroutine bodies, attribute-based pooling, and scene progress callbacks.
 
 ## License
 

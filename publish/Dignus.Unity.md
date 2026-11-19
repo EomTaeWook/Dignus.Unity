@@ -1,4 +1,4 @@
-﻿# Dignus.Unity
+# Dignus.Unity
 
 Lightweight Unity integration for the Dignus framework. It provides dependency
 injection helpers, scene lifecycle coordination, coroutine scheduling, resource
@@ -68,143 +68,190 @@ publish/upm/com.dignus.unity/
 automatically when a GameObject is destroyed or when a scene is unloaded through
 `UnityEngine.SceneManagement.SceneManager` directly.
 
-## Dependency injection
+## Dependency injection and scene setup
 
-Mark services and controllers with `[Injectable]`, then register the application
-assembly once during startup:
+The following snippets are separate files in the consuming Unity project. Register the application assembly once before scene `Awake()` and call `Build()` before resolving services. The startup hook below uses the assembly containing the controller; register other required assemblies there as well.
 
 ```csharp
-using Dignus.DependencyInjection.Attributes;
-using Dignus.Unity;
+// ApplicationBootstrap.cs
 using Dignus.Unity.DependencyInjection;
+using UnityEngine;
+
+public static class ApplicationBootstrap
+{
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Initialize()
+    {
+        var container = DignusUnityServiceContainer.RegisterDependencies(typeof(LobbySceneController).Assembly);
+        container.Build();
+    }
+}
+```
+
+`ISceneModel` carries Dignus's transient registration attribute. The concrete model below is registered by the assembly scan through that interface.
+
+```csharp
+// LobbySceneModel.cs
+using Dignus.Unity.Binding;
 using Dignus.Unity.Framework;
 
-[Injectable(LifeScope.Singleton)]
-public sealed class LobbySceneController : SceneControllerBase<LobbyScene>
+public class LobbySceneModel : ISceneModel
 {
-    private readonly GameClientService _gameClientService;
-
-    public LobbySceneController(GameClientService gameClientService)
+    public BindableProperty<int> Gold
     {
-        _gameClientService = gameClientService;
+        get;
+    } = new BindableProperty<int>(0);
+}
+```
+
+The controller is transient so separate scene instances do not share scene references. `[Inject]` on the base class's `Model` property supplies the concrete model.
+
+```csharp
+// LobbySceneController.cs
+using Dignus.DependencyInjection;
+using Dignus.DependencyInjection.Attributes;
+using Dignus.Unity.Framework;
+
+[Injectable(LifeScope.Transient)]
+public class LobbySceneController : SceneControllerBase<LobbyScene, LobbySceneModel>
+{
+    public void Initialize()
+    {
+        Model.Gold.ValueChanged += OnGoldChanged;
+        OnGoldChanged(Model.Gold.Value);
+    }
+
+    public void AddGold(int amount)
+    {
+        Model.Gold.Value += amount;
     }
 
     public override void Dispose()
     {
+        Model.Gold.ValueChanged -= OnGoldChanged;
+        Scene = null;
     }
-}
 
-public sealed class ApplicationManager : SingletonMonoBehaviour<ApplicationManager>
-{
-    private bool _initialized;
-
-    public void Initialize()
+    private void OnGoldChanged(int gold)
     {
-        if (_initialized)
-        {
-            return;
-        }
-
-        var container = DignusUnityServiceContainer.RegisterDependencies(GetType().Assembly);
-        container.Build();
-        _initialized = true;
+        Scene.ShowGold(gold);
     }
 }
 ```
 
-Resolve services only after `Build()` has completed:
-
 ```csharp
-var controller = DignusUnityServiceContainer.GetService<LobbySceneController>();
-```
-
-If an injectable type has multiple public constructors, annotate the constructor
-to use with `[InjectConstructor]`.
-
-## Scene architecture
-
-`SceneBase<TController>` resolves the controller before calling
-`OnAwakeScene()` and binds the scene automatically:
-
-```csharp
+// LobbyScene.cs
 using Dignus.Unity.Framework;
+using UnityEngine;
 
-public sealed class LobbyScene : SceneBase<LobbySceneController>
+public class LobbyScene : SceneBase<LobbySceneController>
 {
     protected override void OnAwakeScene()
     {
         SceneController.Initialize();
     }
 
+    public void ShowGold(int gold)
+    {
+        Debug.Log(gold);
+    }
+
     public override void OnDestroyScene()
     {
-        SceneController.Dispose();
+        if (SceneController != null)
+        {
+            SceneController.Dispose();
+        }
     }
 }
 ```
 
+Attach `LobbyScene` to a GameObject in the scene. Its inherited `Awake()` resolves the controller, binds the scene, and then invokes `OnAwakeScene()`. The scene base does not automatically call `Dispose()`; the example does so in `OnDestroyScene()`.
+
+`OnShow()` and `OnHide()` follow `OnEnable()` and `OnDisable()`. They are separate from manager-driven `OnDestroyScene()`. If overriding the inherited `Awake()`, call `base.Awake()` to preserve controller resolution and binding. Use manager-driven scene transitions for the cleanup shown here; ordinary GameObject destruction does not invoke `OnDestroyScene()`.
+
 ### Runtime constructor arguments
 
-Unity components assigned to the inherited `InjectedComponents` array are
-matched to controller constructor parameters before the container is used as a
-fallback:
+`InjectedComponents` is optional. When populated, the activator matches those components to constructor parameters and resolves remaining dependencies from the container. Use this alternative controller declaration when the controller needs a scene component at construction time; do not include both declarations of `LobbySceneController` in one project.
 
 ```csharp
-public sealed class LobbySceneController : SceneControllerBase<LobbyScene>
+// Alternative LobbySceneController.cs
+using Dignus.DependencyInjection;
+using Dignus.DependencyInjection.Attributes;
+using Dignus.Unity.Framework;
+
+[Injectable(LifeScope.Transient)]
+public class LobbySceneController : SceneControllerBase<LobbyScene, LobbySceneModel>
 {
     private readonly LobbyUI _lobbyUI;
 
-    public LobbySceneController(LobbyUI lobbyUI, GameClientService gameClientService)
+    public LobbySceneController(LobbyUI lobbyUI)
     {
         _lobbyUI = lobbyUI;
     }
 
+    public void Initialize()
+    {
+        _lobbyUI.ShowGold(Model.Gold.Value);
+    }
+
     public override void Dispose()
     {
+        Scene = null;
     }
 }
 ```
 
-In the Unity Inspector, add the scene's `LobbyUI` component to
-`LobbyScene.InjectedComponents`. Do not assign `InjectedComponents` inside
-`OnAwakeScene()`?봠ontroller resolution has already happened by then.
+```csharp
+// LobbyUI.cs
+using UnityEngine;
+
+public class LobbyUI : MonoBehaviour
+{
+    public void ShowGold(int gold)
+    {
+        Debug.Log(gold);
+    }
+}
+```
+
+Add the scene's `LobbyUI` component to `LobbyScene.InjectedComponents` in the Inspector. Configure it before `SceneBase.Awake()`; `OnAwakeScene()` is too late. Matching is based on assignable parameter types, and multiple matching runtime arguments cause an exception. If an injectable type has multiple public constructors, select one with `[InjectConstructor]`.
 
 ## Bindable properties
 
-```csharp
-using Dignus.Unity.Binding;
+The model/controller example above demonstrates creation, subscription, value changes, initial display, and unsubscription. Subscription alone does not emit the current value. Invoke the display handler explicitly after subscribing.
 
-public sealed class LobbySceneModel : ISceneModel
-{
-    public BindableProperty<int> Gold { get; } = new BindableProperty<int>(0);
-}
-```
-
-Subscribe and unsubscribe with the Unity component lifecycle:
-
-```csharp
-private void OnEnable()
-{
-    _model.Gold.ValueChanged += OnGoldChanged;
-    OnGoldChanged(_model.Gold.Value);
-}
-
-private void OnDisable()
-{
-    _model.Gold.ValueChanged -= OnGoldChanged;
-}
-```
-
-Assigning an equal value does not raise `ValueChanged`. Call `NotifyChanged()`
-when the contained object changed internally without replacing the value.
+`ValueChanged` is skipped when the current value is non-null and equals the assigned value. `NotifyChanged()` forces notification when the contained object changes without replacing the value. `IReadOnlyBindableProperty<T>` exposes the value and event without a setter. Consumers must unsubscribe when their owning component or controller ends its lifetime.
 
 ## Managers
 
 ### Coroutine manager
 
 ```csharp
-DignusUnityCoroutineManager.Start(MyCoroutine());
-DignusUnityCoroutineManager.Start(0.5f, MyCoroutine(), OnCompleted);
+// CoroutineExample.cs
+using Dignus.Unity.Coroutine;
+using System.Collections;
+using UnityEngine;
+
+public class CoroutineExample : MonoBehaviour
+{
+    private void Start()
+    {
+        DignusUnityCoroutineManager.Start(0.5f, RunSequence(), OnCompleted);
+    }
+
+    private IEnumerator RunSequence()
+    {
+        Debug.Log("Started");
+        yield return null;
+        Debug.Log("Continued");
+    }
+
+    private void OnCompleted()
+    {
+        Debug.Log("Completed");
+    }
+}
 ```
 
 The scheduler advances from `Update()` using `Time.deltaTime` once per frame.
@@ -247,8 +294,7 @@ var prefab = DignusUnityResourceManager.Instance.LoadAsset<LobbyUI>();
 An explicit path is also supported:
 
 ```csharp
-var atlas = DignusUnityResourceManager.Instance.LoadAsset<SpriteAtlas>(
-    "SpriteAtlases/Common");
+var atlas = DignusUnityResourceManager.Instance.LoadAsset<UnityEngine.U2D.SpriteAtlas>("SpriteAtlases/Common");
 ```
 
 Loaded assets are cached by resource path until `UnloadAsset()` is called.
@@ -275,6 +321,79 @@ completion callback.
 Each managed scene should contain one authoritative `SceneBase`. If several
 instances register during the same load, the last registered instance becomes
 the callback value.
+
+### Attribute-based resources and pooling
+
+Save a prefab as `Assets/Resources/Prefabs/Bullet.prefab` and attach `Bullet` to its root. Resource paths omit the `Resources/` prefix and file extension. The default file name is the component type name; `[PrefabPath("Prefabs", "Bullet")]` also supplies it explicitly.
+
+```csharp
+// Bullet.cs
+using Dignus.Unity.Attributes;
+using UnityEngine;
+
+[PrefabPath("Prefabs")]
+public class Bullet : MonoBehaviour
+{
+}
+```
+
+```csharp
+// Inside a MonoBehaviour, with Dignus.Unity and Dignus.Unity.Extensions imported.
+var prefab = DignusUnityResourceManager.Instance.LoadAsset<Bullet>();
+var bullet = this.InstantiateWithPool<Bullet>();
+if (bullet != null)
+{
+    bullet.Recycle();
+}
+```
+
+The explicit resource load only obtains the prefab. The no-argument extension uses the same attribute and attaches a pooled instance to the caller; these are alternative entry points. Pooled object state is not reset automatically. Keep reusable initialization in the appropriate activation or caller-owned code.
+
+`DestroyPool(prefab)` clears that pool's active and inactive objects. `Clear()` clears all pools, and `ClearExceptActive()` removes inactive objects only. Do not use an object after its pool has destroyed it.
+
+### Scene progress and completion
+
+Add `LobbyScene` to Build Settings and call `OpenLobby()` from the existing application bootstrap or navigation flow after DI initialization. Keep this observer outside the scene being replaced if it must receive the entire transition. Issue the next load only after completion, as described above.
+
+```csharp
+// SceneNavigation.cs
+using Dignus.Unity;
+using Dignus.Unity.Framework;
+using UnityEngine;
+
+public class SceneNavigation : MonoBehaviour
+{
+    private void OnEnable()
+    {
+        DignusUnitySceneManager.Instance.OnSceneLoadingProgress += OnLoadingProgress;
+    }
+
+    private void OnDisable()
+    {
+        DignusUnitySceneManager.Instance.OnSceneLoadingProgress -= OnLoadingProgress;
+    }
+
+    public void OpenLobby()
+    {
+        DignusUnitySceneManager.Instance.LoadScene("LobbyScene", OnLobbyLoaded);
+    }
+
+    private void OnLoadingProgress(string sceneName, float progress)
+    {
+        Debug.Log($"{sceneName}: {progress}");
+    }
+
+    private void OnLobbyLoaded(SceneBase scene)
+    {
+        if (scene is LobbyScene lobbyScene)
+        {
+            Debug.Log(lobbyScene.name);
+        }
+    }
+}
+```
+
+The progress handler receives the underlying asynchronous operation's progress. The completion callback is invoked separately; do not infer completion solely from a progress value. Its scene argument can be null when no `SceneBase` registered during loading. Event unsubscription and request callbacks have separate lifetimes.
 
 ## Known lifecycle boundaries
 
