@@ -1,62 +1,45 @@
 # Dignus.Unity
 
-Unity integration package for the Dignus ecosystem.
+English | [한국어](README.ko.md)
 
-- Dependency injection bootstrap and scene architecture utilities
-- Coroutine and object pool management
-- Scene transition lifecycle helpers
-- Reactive bindable properties for scene model/state sync
+Unity integration for dependency injection, scene lifecycles, resources, object pools, coroutines, and binding.
 
-Requires Unity 2022.3 or later.
+## Requirements
 
-## NuGet Installation
+Unity 2022.3 or later. Attribute-based resource loading uses Unity Resources folders.
 
-NuGet package: [Dignus.Unity](https://www.nuget.org/packages/Dignus.Unity)
-
-```shell
-dotnet add package Dignus.Unity --version 1.1.6
-```
-
-Or add a package reference directly:
+## Installation
 
 ```xml
 <PackageReference Include="Dignus.Unity" Version="1.1.6" />
 ```
 
-NuGet resolves the `Dignus` dependency automatically.
+Unity Package Manager Git URL:
 
-## Unity Package Manager Installation (GitHub URL)
-
-Use this when installing directly from a GitHub repository.
-
-The package is located in a repository subfolder, so install it with the `path` query parameter:
-
-```json
-{
-  "dependencies": {
-    "com.dignus.unity": "https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.6"
-  }
-}
+```text
+https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.6
 ```
 
-The Git package already contains its compatible `Dignus.dll`. Do not add another
-copy of that assembly to the Unity project.
+## Quick start
 
-## Package (UPM)
+Run the following in startup code before scene Awake(), registering each required application assembly once.
 
-This repository publishes a Unity package in:
+```csharp
+using Dignus.Unity.DependencyInjection;
 
-- `publish/upm/com.dignus.unity`
+var container = DignusUnityServiceContainer.RegisterDependencies(typeof(LobbySceneController).Assembly);
+container.Build();
+```
 
-All package assets and folders include committed `.meta` files so Unity can
-import the package from its immutable cache.
+## Usage
 
-## Library API Usage
+Follow the guide's complete bootstrap/model/controller/scene example. Configure optional InjectedComponents before Awake(). Dispose controller-owned resources through OnDestroyScene() on manager-driven transitions.
 
-Library setup, API usage, and code examples are documented in the [Dignus.Unity API guide](publish/Dignus.Unity.md). It includes startup registration, scene/controller/model wiring and cleanup, optional component injection, binding subscriptions, coroutine bodies, attribute-based pooling, and scene progress callbacks.
+## Documentation
+
+- [API and connected examples](publish/Dignus.Unity.md)
+- [UPM package guide](publish/upm/com.dignus.unity/README.md)
 
 ## License
 
-- This package is released under the MIT License.
-- See [LICENSE](LICENSE).
-
+MIT License. See [LICENSE](LICENSE).
