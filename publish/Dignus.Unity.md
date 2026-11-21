@@ -1,5 +1,7 @@
 # Dignus.Unity
 
+English | [한국어](Dignus.Unity.ko.md)
+
 [English overview](https://github.com/EomTaeWook/Dignus.Unity/blob/main/README.md) | [한국어 개요](https://github.com/EomTaeWook/Dignus.Unity/blob/main/README.ko.md)
 
 Lightweight Unity integration for the Dignus framework. It provides dependency

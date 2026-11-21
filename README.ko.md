@@ -14,7 +14,7 @@ Unity 2022.3 이상이 필요하다. 특성 기반 리소스 로드는 Unity Res
 <PackageReference Include="Dignus.Unity" Version="1.1.6" />
 ```
 
-Unity Package Manager Git URL:
+Unity Package Manager Git 주소:
 
 ```text
 https://github.com/EomTaeWook/Dignus.Unity.git?path=/publish/upm/com.dignus.unity#v1.1.6
@@ -37,8 +37,8 @@ container.Build();
 
 ## 문서
 
-- [API와 연결 예제 · 영어](publish/Dignus.Unity.md)
-- [UPM 패키지 가이드 · 영어](publish/upm/com.dignus.unity/README.md)
+- [API와 연결 예제](publish/Dignus.Unity.ko.md)
+- [UPM 패키지 가이드](publish/Dignus.Unity.ko.md#설치)
 
 ## 라이선스
 

@@ -6,6 +6,8 @@ Lightweight Unity integration for the Dignus framework. It provides dependency
 injection helpers, scene lifecycle coordination, coroutine scheduling, resource
 caching, object pooling, and bindable properties.
 
+[한국어 API 가이드](https://github.com/EomTaeWook/Dignus.Unity/blob/main/publish/Dignus.Unity.ko.md)
+
 ## Requirements
 
 - Unity 2022.3 or later
